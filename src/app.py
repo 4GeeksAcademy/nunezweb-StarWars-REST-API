@@ -47,7 +47,7 @@ def get_list_users():
 def get_user(user_id):
     user=Users.query.filter_by(id=user_id).first()
     if user is None:
-        return jsonify(["User not found"]), 404
+        return jsonify({"message": "User not found"}), 404
     return jsonify(user.serialize()), 200
 
 @app.route('/users', methods=['POST'])
@@ -73,7 +73,7 @@ def get_list_people():
 def get_people(people_id):
     people=People.query.filter_by(id=people_id).first()
     if people is None:
-        return jsonify(["People not found"]), 404
+        return jsonify({"message": "People not found"}), 404
     return jsonify(people.serialize()), 200
 
 @app.route('/planets', methods=["GET"])
@@ -86,7 +86,7 @@ def get_list_planets():
 def get_planet(planet_id):
     planet=Planets.query.filter_by(id=planet_id).first()
     if planet is None:
-        return jsonify(["Planet not found"]), 404
+        return jsonify({"message": "Planet not found"}), 404
     return jsonify(planet.serialize()), 200
 
 @app.route('/favorite/planets/<int:planet_id>', methods=['POST'])
@@ -123,17 +123,27 @@ def get_list_favorites():
     return jsonify(favorites_list)
 
 @app.route('/favorite/people/<int:people_id>', methods=['POST'])
-def post_favorite_people(people_id):
-    people_body = request.get_json()
-    people_db = Planets(
-        name_people = people_body["name_people"],
-        eye_color = people_body["eye_color"],
-        birth_year = people_body["birth_year"],
-        homeworld = people_body["homeworld"],
-    )
-    db.session.add(people_db)
-    db.session.commit
-    return jsonify(people_db.serialize()), 201
+def add_favorite_people(people_id):
+    people=People.query.get(people_id)
+    if people is None:
+        return jsonify({"message": "People not found"}), 404
+    user_id=1
+    favorite = Favorites(user_id=user_id,people_id=people_id,)
+    print(people)
+    print(favorite.serialize())
+    db.session.add(favorite)
+    db.session.commit()
+    return jsonify({"message": "People added to favorite"}), 200
+
+@app.route('/favorite/people/<int:people_id>', methods=['DELETE'])
+def delete_favorite_people(people_id):
+    people=Favorites.query.get(people_id)
+    if people is None:
+        return jsonify({"message": "People not found"}), 404
+    favorite = Favorites.query.filter_by(user_id=1,people_id=people_id)
+    db.session.delete(favorite)
+    db.session.commit()
+    return jsonify({"message": "People added to favorite"}), 200
 
 # @app.route('/favorite/people', methods=['POST'])
 # def post_people():
