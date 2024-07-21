@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Users, People, Planets
+from models import db, Users, People, Planets, Favorites
 #from models import Person
 
 app = Flask(__name__)
@@ -42,9 +42,6 @@ def get_list_users():
     users=Users.query.all()
     users_list=list(map(lambda user:user.serialize(),users))
     return jsonify(users_list)
-    # new_user=User(email="test@gmail.com", password="1235566", is_active=True)
-    # user_serialize=new_user.serialize()
-    # return jsonify(user_serialize), 200
 
 @app.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
@@ -52,6 +49,19 @@ def get_user(user_id):
     if user is None:
         return jsonify(["User not found"]), 404
     return jsonify(user.serialize()), 200
+
+@app.route('/users', methods=['POST'])
+def create_user():
+    user_body = request.get_json()
+    user_db = Planets(
+        email = user_body["email"],
+        password = user_body["password"],
+        is_active = user_body["is_active"],
+        population = user_body["population"],
+    )
+    db.session.add(user_db)
+    db.session.commit
+    return jsonify(user_db.serialize()), 201
 
 @app.route('/people', methods=["GET"])
 def get_list_people():
@@ -78,6 +88,65 @@ def get_planet(planet_id):
     if planet is None:
         return jsonify(["Planet not found"]), 404
     return jsonify(planet.serialize()), 200
+
+@app.route('/favorite/planets/<int:planet_id>', methods=['POST'])
+def post_favorite_planet(planet_id):
+    planet_body = request.get_json()
+    planet_db = Planets(
+        planets_name = planet_body["planets_name"],
+        climate = planet_body["climate"],
+        terrain = planet_body["terrain"],
+        population = planet_body["population"],
+    )
+    db.session.add(planet_db)
+    db.session.commit
+    return jsonify(planet_db.serialize()), 201
+
+# @app.route('/favorite/planets', methods=['POST'])
+# def post_planet():
+#     planet_body = request.get_json()
+#     planet_db = Planets(
+#         planets_name = planet_body["planets_name"],
+#         climate = planet_body["climate"],
+#         terrain = planet_body["terrain"],
+#         population = planet_body["population"],
+#     )
+#     db.session.add(planet_db)
+#     db.session.commit
+#     return jsonify(planet_db.serialize()), 201
+
+
+@app.route('/users/favorites', methods=["GET"])
+def get_list_favorites():
+    favorites=Favorites.query.all()
+    favorites_list=list(map(lambda favorites:favorites.serialize(), favorites))
+    return jsonify(favorites_list)
+
+@app.route('/favorite/people/<int:people_id>', methods=['POST'])
+def post_favorite_people(people_id):
+    people_body = request.get_json()
+    people_db = Planets(
+        name_people = people_body["name_people"],
+        eye_color = people_body["eye_color"],
+        birth_year = people_body["birth_year"],
+        homeworld = people_body["homeworld"],
+    )
+    db.session.add(people_db)
+    db.session.commit
+    return jsonify(people_db.serialize()), 201
+
+# @app.route('/favorite/people', methods=['POST'])
+# def post_people():
+#     people_body = request.get_json()
+#     people_db = Planets(
+#         name_people = people_body["name_people"],
+#         eye_color = people_body["eye_color"],
+#         birth_year = people_body["birth_year"],
+#         homeworld = people_body["homeworld"],
+#     )
+#     db.session.add(people_db)
+#     db.session.commit
+#     return jsonify(people_db.serialize()), 201
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
